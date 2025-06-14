@@ -1,3 +1,4 @@
+
 // ==UserScript==
 // @name         SteamGifts Key Prices
 // @namespace    http://tampermonkey.net/
@@ -524,6 +525,7 @@
         if (discountValue > 90) color = '#d9534f';
         else if (discountValue > 60) color = '#f0ad4e';
         else if (discountValue > 30) color = '#5cb89c';
+        else color = '#45cc54';
 
         return `<span style="
             background-color: ${color};
@@ -566,7 +568,7 @@
 
     function updateListPriceDisplay(result, priceElement) {
         if (result.success) {
-            const discountPart = result.discount ? ` ${createDiscountBadge(result.discount)}` : '';
+            const discountPart = ` ${createDiscountBadge(result.discount)}`;
             const sourcePart = createSourceBadge(result.source);
             priceElement.innerHTML = `<a href="${result.url}" target="_blank" rel="noopener noreferrer" style="color: #3f7300; text-decoration: none; font-weight: bold;">${result.price}</a>${discountPart}${sourcePart}`;
         } else {
