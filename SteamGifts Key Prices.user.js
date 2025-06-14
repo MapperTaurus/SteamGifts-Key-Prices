@@ -1,10 +1,13 @@
 // ==UserScript==
 // @name         SteamGifts Key Prices
 // @namespace    http://tampermonkey.net/
-// @version      3.2
+// @version      3.3
 // @description  Display lowest keyshop prices from GG.deals on SteamGifts giveaways, with support for both individual pages and list view, plus optional API key for higher limits
 // @author       Taurus#
-// @icon         https://i.imgur.com/JNGy8a2.png
+// @homepage	 https://github.com/MapperTaurus/SteamGifts_Key_Prices
+// @downloadURL	https://github.com/MapperTaurus/SteamGifts_Key_Prices/raw/master/SteamGifts%20Key%20Prices.user.js
+// @updateURL	https://github.com/MapperTaurus/SteamGifts_Key_Prices/raw/master/SteamGifts%20Key%20Prices.user.js
+// @icon         https://i.imgur.com/UxcFblA.png
 // @match        https://www.steamgifts.com/
 // @match        https://www.steamgifts.com/giveaway/*
 // @match        https://www.steamgifts.com/giveaways*
@@ -17,7 +20,7 @@
 // @connect      gg.deals
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // === CONFIG HANDLING ===
@@ -149,58 +152,31 @@
                 'User-Agent': 'SteamGifts-KeyPrices-UserScript/3.1'
             },
             timeout: apiKey ? 8000 : 15000, // Faster timeout with API key
-            onload: function(response) {
+            onload: function (response) {
                 activeRequests--;
                 if (response.status === 200) {
                     try {
                         const data = JSON.parse(response.responseText);
-                        callback({
-                            success: true,
-                            data: data
-                        });
+                        callback({ success: true, data: data });
                     } catch (err) {
                         console.error("❌API JSON parsing error:", err);
-                        callback({
-                            success: false,
-                            message: "❌Error parsing API response",
-                            error: err
-                        });
+                        callback({ success: false, message: "❌Error parsing API response", error: err });
                     }
                 } else if (response.status === 429) {
-                    callback({
-                        success: false,
-                        message: "⏰Rate limit exceeded",
-                        error: `HTTP ${response.status}`
-                    });
+                    callback({ success: false, message: "⏰Rate limit exceeded", error: `HTTP ${response.status}` });
                 } else if (response.status === 401) {
-                    callback({
-                        success: false,
-                        message: "🔐Invalid API key",
-                        error: `HTTP ${response.status}`
-                    });
+                    callback({ success: false, message: "🔐Invalid API key", error: `HTTP ${response.status}` });
                 } else {
-                    callback({
-                        success: false,
-                        message: `⚠️API request failed (HTTP ${response.status})`,
-                        error: `HTTP ${response.status}`
-                    });
+                    callback({ success: false, message: `⚠️API request failed (HTTP ${response.status})`, error: `HTTP ${response.status}` });
                 }
             },
-            onerror: function(error) {
+            onerror: function (error) {
                 activeRequests--;
-                callback({
-                    success: false,
-                    message: `❌Network error`,
-                    error: error
-                });
+                callback({ success: false, message: `❌Network error`, error: error });
             },
             ontimeout: function() {
                 activeRequests--;
-                callback({
-                    success: false,
-                    message: `⏰Request timeout`,
-                    error: 'timeout'
-                });
+                callback({ success: false, message: `⏰Request timeout`, error: 'timeout' });
             }
         });
     }
@@ -212,9 +188,9 @@
 
     function isGiveawayListPage() {
         return window.location.pathname === '/' ||
-            window.location.pathname.startsWith('/giveaways') ||
-            window.location.pathname.startsWith('/user/') ||
-            window.location.pathname.startsWith('/group/');
+               window.location.pathname.startsWith('/giveaways') ||
+               window.location.pathname.startsWith('/user/') ||
+               window.location.pathname.startsWith('/group/');
     }
 
     // === UTILITY FUNCTIONS ===
@@ -368,9 +344,7 @@
         // Start new request
         pendingRequests.set(cacheKey, [callback]);
 
-        makeApiRequest('/games', {
-            steam: appID
-        }, (result) => {
+        makeApiRequest('/games', { steam: appID }, (result) => {
             const callbacks = pendingRequests.get(cacheKey) || [];
             pendingRequests.delete(cacheKey);
 
@@ -451,7 +425,7 @@
         GM_xmlhttpRequest({
             method: "GET",
             url: url,
-            onload: function(response) {
+            onload: function (response) {
                 if (response.status === 200) {
                     try {
                         const parser = new DOMParser();
@@ -460,22 +434,12 @@
                         const lowest = parseKeyshopPrices(doc);
 
                         if (lowest) {
-                            callback({
-                                success: true,
-                                price: lowest.priceText,
-                                discount: lowest.discountText,
-                                url: url,
-                                source: 'Scraping'
-                            });
+                            callback({ success: true, price: lowest.priceText, discount: lowest.discountText, url: url, source: 'Scraping' });
                         } else if (fallbackUrls && fallbackUrls.length > 0) {
                             const nextUrl = fallbackUrls.shift();
                             tryFetchFromUrl(nextUrl, callback, fallbackUrls);
                         } else {
-                            callback({
-                                success: false,
-                                message: "⭕No keyshop prices found",
-                                url: url
-                            });
+                            callback({ success: false, message: "⭕No keyshop prices found", url: url });
                         }
                     } catch (err) {
                         console.error("❌Parsing error:", err);
@@ -483,11 +447,7 @@
                             const nextUrl = fallbackUrls.shift();
                             tryFetchFromUrl(nextUrl, callback, fallbackUrls);
                         } else {
-                            callback({
-                                success: false,
-                                message: "❌Error parsing GG.deals page",
-                                url: url
-                            });
+                            callback({ success: false, message: "❌Error parsing GG.deals page", url: url });
                         }
                     }
                 } else {
@@ -495,24 +455,16 @@
                         const nextUrl = fallbackUrls.shift();
                         tryFetchFromUrl(nextUrl, callback, fallbackUrls);
                     } else {
-                        callback({
-                            success: false,
-                            message: `⚠️GG.deals request failed (HTTP ${response.status})`,
-                            url: url
-                        });
+                        callback({ success: false, message: `⚠️GG.deals request failed (HTTP ${response.status})`, url: url });
                     }
                 }
             },
-            onerror: function(error) {
+            onerror: function (error) {
                 if (fallbackUrls && fallbackUrls.length > 0) {
                     const nextUrl = fallbackUrls.shift();
                     tryFetchFromUrl(nextUrl, callback, fallbackUrls);
                 } else {
-                    callback({
-                        success: false,
-                        message: `❌Network error: ${error.error}`,
-                        url: url
-                    });
+                    callback({ success: false, message: `❌Network error: ${error.error}`, url: url });
                 }
             }
         });
@@ -530,11 +482,7 @@
         }
 
         if (urls.length === 0) {
-            callback({
-                success: false,
-                message: "❌No valid URLs to check",
-                url: ""
-            });
+            callback({ success: false, message: "❌No valid URLs to check", url: "" });
             return;
         }
 
