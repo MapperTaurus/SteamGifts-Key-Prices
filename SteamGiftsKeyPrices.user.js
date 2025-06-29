@@ -7,6 +7,7 @@
 // @homepage	 https://github.com/MapperTaurus/SteamGifts-Key-Prices
 // @downloadURL	 https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js
 // @updateURL	 https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js
+// @license      https://github.com/MapperTaurus/SteamGifts-Key-Prices/blob/master/LICENSE
 // @icon         https://i.imgur.com/UxcFblA.png
 // @match        https://www.steamgifts.com/
 // @match        https://www.steamgifts.com/giveaway/*
