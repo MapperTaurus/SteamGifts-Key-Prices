@@ -1,4 +1,4 @@
-# 🔑 SteamGifts Key Prices
+# ![SteamGifts Key Prices Logo](https://i.imgur.com/UxcFblA.png "SteamGifts Key Prices Logo) SteamGifts Key Prices
 
 A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that displays the **lowest keyshop prices** from [GG.deals](https://gg.deals/) directly on giveaway listings.  
 
@@ -6,7 +6,7 @@ A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that dis
 
 ## ✨ Features
 
-### 🔎 Price Display
+### 🔑 Price Display
 
 - Shows the **lowest keyshop prices** from [GG.deals](https://gg.deals/) directly on:
   - Homepage
