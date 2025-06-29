@@ -118,7 +118,7 @@
     GM_registerMenuCommand(`📄Individual View: ${individualEnabled ? 'ON' : 'OFF'}`, toggleIndividual);
     GM_registerMenuCommand(`📚List View: ${listEnabled ? 'ON' : 'OFF'}`, toggleList);
     GM_registerMenuCommand(`🔑API Key: ${apiKey ? 'SET' : 'NOT SET'}`, manageApiKey);
-    GM_registerMenuCommand(`❤️ Like This Script?`, () => {
+    GM_registerMenuCommand(`❤️Like This Script?`, () => {
   window.open('https://github.com/MapperTaurus/SteamGifts-Key-Prices?tab=readme-ov-file#-like-this-script', '_blank');
 });
 
