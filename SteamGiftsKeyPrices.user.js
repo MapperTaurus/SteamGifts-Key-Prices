@@ -2,7 +2,7 @@
 // @name         SteamGifts Key Prices
 // @namespace    http://tampermonkey.net/
 // @version      3.3
-// @description  Display lowest keyshop prices from GG.deals on SteamGifts giveaways, with support for both individual pages and list view, plus optional API key for higher limits
+// @description  A customizable web extension for SteamGifts that displays the lowest keyshop prices from GG.deals directly on all giveaway pages
 // @author       Taurus#
 // @homepage	 https://github.com/MapperTaurus/SteamGifts-Key-Prices
 // @downloadURL	 https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js
