@@ -4,9 +4,9 @@
 // @version      3.3
 // @description  Display lowest keyshop prices from GG.deals on SteamGifts giveaways, with support for both individual pages and list view, plus optional API key for higher limits
 // @author       Taurus#
-// @homepage	 https://github.com/MapperTaurus/SteamGifts_Key_Prices
-// @downloadURL	 https://github.com/MapperTaurus/SteamGifts_Key_Prices/raw/master/SteamGifts%20Key%20Prices.user.js
-// @updateURL	 https://github.com/MapperTaurus/SteamGifts_Key_Prices/raw/master/SteamGifts%20Key%20Prices.user.js
+// @homepage	 https://github.com/MapperTaurus/SteamGifts-Key-Prices
+// @downloadURL	 https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js
+// @updateURL	 https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js
 // @icon         https://i.imgur.com/UxcFblA.png
 // @match        https://www.steamgifts.com/
 // @match        https://www.steamgifts.com/giveaway/*
