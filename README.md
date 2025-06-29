@@ -21,7 +21,7 @@ A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that dis
 
 - 🔁 **Caching built-in** - already fetched prices are reused across pages to avoid duplicate requests and reduce API load.
 - 💸 Shows discount as **color-coded bubbles** indicating savings:
-- 🧠 Focused on clarity — keeps the SteamGifts UI clean and fast
+- 🧠 Focused on clarity - keeps the SteamGifts UI clean and fast
 
 ### 🎨 Customizability
 
@@ -37,7 +37,7 @@ A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that dis
 ### 🧩 Integrability
 
 - ✅ Fully compatible with popular SteamGifts extensions like:
-  - **ESGST (Enhanced SteamGifts)**
+  - **ESGST (Enhanced SteamGifts & SteamTrades)**
   - **Extended SteamGifts**
 - 🧼 Designed for non-conflicting DOM insertion and CSS
 ---
