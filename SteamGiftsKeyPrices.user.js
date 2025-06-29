@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         SteamGifts Key Prices
-// @namespace    http://tampermonkey.net/
+// @namespace    SteamGifts Key Prices from Deals.GG
 // @version      3.3
 // @description  A customizable web extension for SteamGifts that displays the lowest keyshop prices from GG.deals directly on all giveaway pages
 // @author       Taurus#
