@@ -54,7 +54,9 @@ This is a **userscript**, and requires a userscript manager extension:
 
 Click below to install the script directly:
 
-[![Install from GitHub](https://img.shields.io/badge/Install%20from-GitHub-24292E?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js) [![Install from GreasyFork](https://img.shields.io/badge/Install%20from-GreasyFork-800000?style=for-the-badge&logo=greasyfork&logoColor=white)](https://greasyfork.org/en/scripts/541115-steamgifts-key-prices)
+[![Install from GitHub](https://img.shields.io/badge/Install%20from-GitHub-24292E?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js) 
+
+[![Install from GreasyFork](https://img.shields.io/badge/Install%20from-GreasyFork-800000?style=for-the-badge&logo=greasyfork&logoColor=white)](https://greasyfork.org/en/scripts/541115-steamgifts-key-prices)
 
 > Make sure one of the userscript managers above is installed and enabled in your browser.
 
