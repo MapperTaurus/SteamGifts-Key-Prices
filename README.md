@@ -1,4 +1,4 @@
-# 💰 SteamGifts Key Prices
+# 🔑 SteamGifts Key Prices
 
 A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that displays the **lowest keyshop prices** from [GG.deals](https://gg.deals/) directly on giveaway listings.  
 
@@ -97,7 +97,7 @@ Yes - this script does not interact with your account or modify anything on Stea
 
 ## 👤 Author
 
-Made by [Ivan Todorov](https://github.com/MapperTaurus)  
+Made by [Ivan Todorov (Taurus#)](https://github.com/MapperTaurus)  
 📧 Contact: mappertaurus@gmail.com
 
 ---
