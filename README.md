@@ -99,8 +99,8 @@ Yes - this script does not interact with your account or modify anything on Stea
 
 ## 👤 Author
 
-Made by [Ivan Todorov (Taurus#)](https://github.com/MapperTaurus)  
-📧 Contact: mappertaurus@gmail.com
+Made by [Ivan Todorov](https://github.com/MapperTaurus)  
+📧 Contact: ivan.it.qa@gmail.com
 
 ---
 
@@ -109,6 +109,4 @@ Made by [Ivan Todorov (Taurus#)](https://github.com/MapperTaurus)
 Please consider ⭐ starring the repo and supporting my work:
 
 [![Revolut](https://img.shields.io/badge/Support%20via-Revolut-0075EB?style=for-the-badge&logo=revolut&logoColor=white)](https://Revolut.Me/ivan3ryuk)  
-[![PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://PayPal.me/mappertaurus)  
-[![Steam Trade](https://img.shields.io/badge/Send%20a%20Trade%20Offer-Steam-171A21?style=for-the-badge&logo=steam&logoColor=white)](https://steamcommunity.com/tradeoffer/new/?partner=172949613&token=aw45pePu)  
-[![Steam Wishlist](https://img.shields.io/badge/Gift%20a%20Game-Steam%20Wishlist-1B2838?style=for-the-badge&logo=steam&logoColor=white)](https://store.steampowered.com/wishlist/id/MapperTaurus/#sort=order)
+[![PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://PayPal.me/mappertaurus)
