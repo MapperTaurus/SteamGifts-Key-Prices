@@ -31,7 +31,7 @@ A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that dis
 - 📍 Select the **display location**:
   - List View (main giveaway pages)
   - Individual View (giveaway details page)
-- 🚀 Optional **GG.deals API key support** - increases request limits and enables near-instant price loading
+- 🚀 Uses the official **GG.deals API** for lowest keyshop prices (free API key required)
 - ⚙️ Adjustable internal settings directly in the userscript (no UI clutter)
 
 ### 🧩 Integrability
@@ -81,10 +81,7 @@ Yes - all major listing pages are supported.
 No - it’s lightweight and uses caching to reduce API calls.
 
 **Q: Do I need an API key?**  
-No, but if you set your free [GG.deals API key](https://gg.deals/api/) in the script, you'll get:
-- Higher request limits
-- Faster responses
-- Improved reliability
+Yes. GG.deals now blocks page scraping (HTTP 403), so a free [GG.deals API key](https://gg.deals/api/) is required. Set it from the userscript menu (`🔑 API Key`).
 
 **Q: Is it safe to use?**  
 Yes - this script does not interact with your account or modify anything on SteamGifts' servers.
