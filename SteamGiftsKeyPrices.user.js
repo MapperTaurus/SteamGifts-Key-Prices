@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SteamGifts Key Prices
 // @namespace    SteamGifts Key Prices from Deals.GG
-// @version      4.1
+// @version      4.3
 // @description  A customizable web extension for SteamGifts that displays the lowest keyshop prices from GG.deals directly on all giveaway pages
 // @author       Taurus#
 // @homepage	 https://github.com/MapperTaurus/SteamGifts-Key-Prices
@@ -16,8 +16,10 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_openInTab
 // @connect      api.gg.deals
 // @connect      gg.deals
+// @connect      store.steampowered.com
 // ==/UserScript==
 
 (function () {
@@ -33,17 +35,17 @@
     const API_NOTICE_KEY = 'apiKeyMigrationNotice';
 
     const CURRENCIES = {
-        USD: { region: 'us', symbol: '$', label: 'US Dollar' },
-        EUR: { region: 'eu', symbol: '€', label: 'Euro' },
-        GBP: { region: 'gb', symbol: '£', label: 'British Pound' },
-        CAD: { region: 'ca', symbol: 'CA$', label: 'Canadian Dollar' },
-        AUD: { region: 'au', symbol: 'A$', label: 'Australian Dollar' },
-        CHF: { region: 'ch', symbol: 'CHF', label: 'Swiss Franc' },
-        PLN: { region: 'pl', symbol: 'zł', label: 'Polish Zloty' },
-        BRL: { region: 'br', symbol: 'R$', label: 'Brazilian Real' },
-        SEK: { region: 'se', symbol: 'kr', label: 'Swedish Krona' },
-        NOK: { region: 'no', symbol: 'kr', label: 'Norwegian Krone' },
-        DKK: { region: 'dk', symbol: 'kr', label: 'Danish Krone' }
+        USD: { region: 'us', steamCc: 'us', symbol: '$', label: 'US Dollar' },
+        EUR: { region: 'eu', steamCc: 'de', symbol: '€', label: 'Euro' },
+        GBP: { region: 'gb', steamCc: 'gb', symbol: '£', label: 'British Pound' },
+        CAD: { region: 'ca', steamCc: 'ca', symbol: 'CA$', label: 'Canadian Dollar' },
+        AUD: { region: 'au', steamCc: 'au', symbol: 'A$', label: 'Australian Dollar' },
+        CHF: { region: 'ch', steamCc: 'ch', symbol: 'CHF', label: 'Swiss Franc' },
+        PLN: { region: 'pl', steamCc: 'pl', symbol: 'zł', label: 'Polish Zloty' },
+        BRL: { region: 'br', steamCc: 'br', symbol: 'R$', label: 'Brazilian Real' },
+        SEK: { region: 'se', steamCc: 'se', symbol: 'kr', label: 'Swedish Krona' },
+        NOK: { region: 'no', steamCc: 'no', symbol: 'kr', label: 'Norwegian Krone' },
+        DKK: { region: 'dk', steamCc: 'dk', symbol: 'kr', label: 'Danish Krone' }
     };
     const CURRENCY_CODES = Object.keys(CURRENCIES);
     const LEGACY_REGION_TO_CURRENCY = {
@@ -81,6 +83,10 @@
 
     function getRegion() {
         return getCurrency().region;
+    }
+
+    function getSteamCountry() {
+        return getCurrency().steamCc || 'us';
     }
 
     // === PERFORMANCE OPTIMIZATION ===
@@ -231,8 +237,8 @@
     GM_registerMenuCommand(`📚List View: ${listEnabled ? 'ON' : 'OFF'}`, toggleList);
     GM_registerMenuCommand(`💱Currency: ${getCurrencyCode()}`, chooseCurrency);
     GM_registerMenuCommand(`🔑API Key: ${getApiKey() ? 'SET' : 'NOT SET'}`, manageApiKey);
-    GM_registerMenuCommand(`❤️Like This Script?`, () => {
-        window.open('https://github.com/MapperTaurus/SteamGifts-Key-Prices?tab=readme-ov-file#-like-this-script', '_blank');
+    GM_registerMenuCommand('❤️ Like This Script?', () => {
+        GM_openInTab('https://github.com/MapperTaurus/SteamGifts-Key-Prices#-like-this-script', { active: true });
     });
 
     // === API HELPER FUNCTIONS ===
@@ -339,9 +345,29 @@
     // === PRICE FETCHING FUNCTIONS (ENHANCED WITH CACHING) ===
     function getCacheKey(steamType, steamId, gameTitle) {
         if (steamType && steamId) {
-            return `${steamType}_${steamId}_${getRegion()}`;
+            return `${steamType}_${steamId}_${getRegion()}_rrp`;
         }
-        return `title_${gameTitle || 'unknown'}_${getRegion()}`;
+        return `title_${gameTitle || 'unknown'}_${getRegion()}_rrp`;
+    }
+
+    function discountPercent(retailAmount, keyshopAmount) {
+        const retail = Number(retailAmount);
+        const keyshop = Number(keyshopAmount);
+        if (!Number.isFinite(retail) || !Number.isFinite(keyshop) || retail <= 0 || keyshop < 0) {
+            return null;
+        }
+
+        const percent = Math.floor((1 - keyshop / retail) * 100);
+        return percent > 0 ? percent : null;
+    }
+
+    function priceFromCents(cents, currency) {
+        const amount = Number(cents) / 100;
+        const code = String(currency || '').toUpperCase();
+        if (!Number.isFinite(amount) || amount <= 0 || !code) {
+            return null;
+        }
+        return { amount, currency: code };
     }
 
     function getCachedPrice(cacheKey) {
@@ -407,11 +433,88 @@
         return {
             success: true,
             price: priceText,
-            discount: historicLow ? 'Historic Low' : null,
+            discount: null,
             historicLow: historicLow,
-            url: url,
-            source: 'API'
+            url: url
         };
+    }
+
+    async function fetchJson(url) {
+        const response = await gmGet(url);
+        if (response.status !== 200) {
+            return null;
+        }
+        try {
+            return JSON.parse(response.responseText);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    async function fetchSteamRetailMap(steamType, ids) {
+        const retail = new Map();
+        const cc = getSteamCountry();
+        if (!ids.length || (steamType !== 'app' && steamType !== 'sub')) {
+            return retail;
+        }
+
+        if (steamType === 'app') {
+            for (let i = 0; i < ids.length; i += 50) {
+                const chunk = ids.slice(i, i + 50);
+                const data = await fetchJson(
+                    `https://store.steampowered.com/api/appdetails?appids=${chunk.join(',')}&cc=${cc}&filters=price_overview`
+                );
+                if (!data) {
+                    continue;
+                }
+                chunk.forEach(id => {
+                    const overview = data[id] && data[id].data && data[id].data.price_overview;
+                    if (!overview) {
+                        return;
+                    }
+                    const price = priceFromCents(overview.initial, overview.currency);
+                    if (price) {
+                        retail.set(String(id), price);
+                    }
+                });
+            }
+            return retail;
+        }
+
+        const queue = ids.slice();
+        const workers = Array.from({ length: Math.min(4, queue.length) }, async () => {
+            while (queue.length) {
+                const id = queue.shift();
+                const data = await fetchJson(
+                    `https://store.steampowered.com/api/packagedetails?packageids=${id}&cc=${cc}`
+                );
+                const priceNode = data && data[id] && data[id].data && data[id].data.price;
+                if (!priceNode) {
+                    continue;
+                }
+                const price = priceFromCents(priceNode.initial, priceNode.currency);
+                if (price) {
+                    retail.set(String(id), price);
+                }
+            }
+        });
+        await Promise.all(workers);
+        return retail;
+    }
+
+    function applyRetailDiscount(result, gameData, retailPrice) {
+        if (!result.success || !retailPrice || !gameData || !gameData.prices) {
+            return result;
+        }
+
+        const ggCurrency = String(gameData.prices.currency || '').toUpperCase();
+        if (!ggCurrency || ggCurrency !== retailPrice.currency) {
+            return result;
+        }
+
+        const percent = discountPercent(retailPrice.amount, gameData.prices.currentKeyshops);
+        result.discount = percent ? `-${percent}%` : null;
+        return result;
     }
 
     function requestErrorResult(status) {
@@ -436,7 +539,10 @@
 
         for (let i = 0; i < uniqueIds.length; i += 100) {
             const batch = uniqueIds.slice(i, i + 100);
-            const response = await gmGet(buildPricesUrl(steamType, batch));
+            const [response, retailMap] = await Promise.all([
+                gmGet(buildPricesUrl(steamType, batch)),
+                fetchSteamRetailMap(steamType, batch)
+            ]);
 
             if (response.status !== 200) {
                 const errorResult = requestErrorResult(response.status);
@@ -467,7 +573,8 @@
                     });
                     return;
                 }
-                results.set(id, parseOfficialPrice(gameData, steamType, id));
+                const result = parseOfficialPrice(gameData, steamType, id);
+                results.set(id, applyRetailDiscount(result, gameData, retailMap.get(String(id))));
             });
         }
 
@@ -560,20 +667,20 @@
     }
 
     // === DISPLAY FUNCTIONS ===
-    function createDiscountBadge(discount, historicLow) {
-        if (historicLow) {
-            return `<span style="
-                background-color: #d9534f;
-                color: white;
-                padding: 2px 6px;
-                border-radius: 10px;
-                font-size: 12px;
-                font-weight: bold;
-                margin-left: 6px;
-                display: inline-block;
-            ">📉 Historic Low</span>`;
-        }
+    function createHistoricLowBadge() {
+        return `<span style="
+            background-color: #d9534f;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 6px;
+            display: inline-block;
+        ">📉 Historical Low</span>`;
+    }
 
+    function createDiscountBadge(discount) {
         if (!discount || !String(discount).includes('%')) {
             return '';
         }
@@ -596,26 +703,14 @@
         ">${discount}</span>`;
     }
 
-    function createSourceBadge(source) {
-        if (!source || source === 'Scraping') return '';
-
-        return `<span style="
-            background-color: #007acc;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-weight: bold;
-            margin-left: 4px;
-            display: inline-block;
-        ">API</span>`;
+    function priceBadges(result) {
+        const historicPart = result.historicLow ? createHistoricLowBadge() : '';
+        return `${createDiscountBadge(result.discount)}${historicPart}`;
     }
 
     function updatePriceDisplay(result, priceInfo) {
         if (result.success) {
-            const discountPart = createDiscountBadge(result.discount, result.historicLow);
-            const sourcePart = createSourceBadge(result.source);
-            priceInfo.innerHTML = `<strong>🔑:</strong> <a href="${result.url}" target="_blank" rel="noopener noreferrer" style="font-size:18px;">${result.price}</a>${discountPart}${sourcePart}`;
+            priceInfo.innerHTML = `<strong>🔑:</strong> <a href="${result.url}" target="_blank" rel="noopener noreferrer" style="font-size:18px;">${result.price}</a>${priceBadges(result)}`;
         } else {
             const message = result.message || '⚠️Unable to load price';
             const link = result.url
@@ -627,9 +722,7 @@
 
     function updateListPriceDisplay(result, priceElement) {
         if (result.success) {
-            const discountPart = createDiscountBadge(result.discount, result.historicLow);
-            const sourcePart = createSourceBadge(result.source);
-            priceElement.innerHTML = `<a href="${result.url}" target="_blank" rel="noopener noreferrer" style="color: #3f7300; text-decoration: none; font-weight: bold;">${result.price}</a>${discountPart}${sourcePart}`;
+            priceElement.innerHTML = `<a href="${result.url}" target="_blank" rel="noopener noreferrer" style="color: #324862; text-decoration: none; font-weight: bold;">${result.price}</a>${priceBadges(result)}`;
         } else {
             const message = result.message || '⚠️Unable to load price';
             priceElement.innerHTML = `<span style="color: #888; font-size: 12px;">${message}</span>`;
@@ -735,7 +828,7 @@
 
         const priceElement = document.createElement('div');
         priceElement.style.fontSize = '14px';
-        priceElement.style.color = '#f6f6f6';
+        priceElement.style.color = '#324862';
         priceElement.style.marginTop = '2px';
         priceElement.style.lineHeight = '1.2';
         headingElement.appendChild(priceElement);
@@ -810,7 +903,7 @@
 
     // === MAIN INITIALIZATION ===
     function init() {
-        console.log('🔑 SteamGifts Key Prices v4.1 initialized');
+        console.log('🔑 SteamGifts Key Prices v4.3 initialized');
         console.log(`📊 Mode: ${currentMode}, Individual: ${individualEnabled}, List: ${listEnabled}, API: ${getApiKey() ? 'SET' : 'NOT SET'}, Currency: ${getCurrencyCode()}`);
 
         maybePromptForApiKeyOnce();
