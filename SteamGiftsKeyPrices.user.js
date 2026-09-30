@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SteamGifts Key Prices
 // @namespace    SteamGifts Key Prices from Deals.GG
-// @version      4.3
+// @version      4.4
 // @description  A customizable web extension for SteamGifts that displays the lowest keyshop prices from GG.deals directly on all giveaway pages
 // @author       Taurus#
 // @homepage	 https://github.com/MapperTaurus/SteamGifts-Key-Prices
@@ -36,7 +36,7 @@
 
     const CURRENCIES = {
         USD: { region: 'us', steamCc: 'us', symbol: '$', label: 'US Dollar' },
-        EUR: { region: 'eu', steamCc: 'de', symbol: '€', label: 'Euro' },
+        EUR: { region: 'eu', steamCc: 'de', steamFallbacks: ['fr', 'nl', 'es', 'it', 'at', 'be', 'pt', 'ie', 'fi', 'gr'], symbol: '€', label: 'Euro' },
         GBP: { region: 'gb', steamCc: 'gb', symbol: '£', label: 'British Pound' },
         CAD: { region: 'ca', steamCc: 'ca', symbol: 'CA$', label: 'Canadian Dollar' },
         AUD: { region: 'au', steamCc: 'au', symbol: 'A$', label: 'Australian Dollar' },
@@ -59,7 +59,7 @@
         bundle: 'https://api.gg.deals/v1/prices/by-steam-bundle-id/'
     };
 
-    const currentMode = GM_getValue(MODE_KEY, 'click');
+    const currentMode = GM_getValue(MODE_KEY, 'auto');
     const individualEnabled = GM_getValue(INDIVIDUAL_KEY, true);
     const listEnabled = GM_getValue(LIST_KEY, true);
 
@@ -85,8 +85,10 @@
         return getCurrency().region;
     }
 
-    function getSteamCountry() {
-        return getCurrency().steamCc || 'us';
+    function steamCountryCodes() {
+        const currency = getCurrency();
+        const codes = [currency.steamCc || 'us', ...(currency.steamFallbacks || [])];
+        return [...new Set(codes.filter(Boolean))];
     }
 
     // === PERFORMANCE OPTIMIZATION ===
@@ -345,9 +347,9 @@
     // === PRICE FETCHING FUNCTIONS (ENHANCED WITH CACHING) ===
     function getCacheKey(steamType, steamId, gameTitle) {
         if (steamType && steamId) {
-            return `${steamType}_${steamId}_${getRegion()}_rrp`;
+            return `${steamType}_${steamId}_${getRegion()}_v44b`;
         }
-        return `title_${gameTitle || 'unknown'}_${getRegion()}_rrp`;
+        return `title_${gameTitle || 'unknown'}_${getRegion()}_v44b`;
     }
 
     function discountPercent(retailAmount, keyshopAmount) {
@@ -361,13 +363,35 @@
         return percent > 0 ? percent : null;
     }
 
-    function priceFromCents(cents, currency) {
-        const amount = Number(cents) / 100;
-        const code = String(currency || '').toUpperCase();
-        if (!Number.isFinite(amount) || amount <= 0 || !code) {
+    function increasePercent(officialAmount, keyshopAmount) {
+        const official = Number(officialAmount);
+        const keyshop = Number(keyshopAmount);
+        if (!Number.isFinite(official) || !Number.isFinite(keyshop) || official <= 0 || keyshop < 0) {
             return null;
         }
-        return { amount, currency: code };
+        if (keyshop <= official + 0.009) {
+            return null;
+        }
+
+        const percent = Math.round(((keyshop - official) / official) * 100);
+        return Math.max(percent, 1);
+    }
+
+    function priceFromCents(initialCents, finalCents, currency) {
+        const code = String(currency || '').toUpperCase();
+        const initial = Number(initialCents) / 100;
+        const current = Number(finalCents) / 100;
+        const hasInitial = Number.isFinite(initial) && initial > 0;
+        const hasCurrent = Number.isFinite(current) && current >= 0;
+        if (!code || (!hasInitial && !hasCurrent)) {
+            return null;
+        }
+
+        return {
+            amount: hasInitial ? initial : current,
+            current: hasCurrent ? current : initial,
+            currency: code
+        };
     }
 
     function getCachedPrice(cacheKey) {
@@ -434,6 +458,7 @@
             success: true,
             price: priceText,
             discount: null,
+            aboveOfficial: false,
             historicLow: historicLow,
             url: url
         };
@@ -451,36 +476,39 @@
         }
     }
 
-    async function fetchSteamRetailMap(steamType, ids) {
-        const retail = new Map();
-        const cc = getSteamCountry();
-        if (!ids.length || (steamType !== 'app' && steamType !== 'sub')) {
-            return retail;
+    function matchingSteamPrice(price) {
+        if (!price || price.currency !== getCurrencyCode()) {
+            return null;
         }
+        return price;
+    }
 
-        if (steamType === 'app') {
-            for (let i = 0; i < ids.length; i += 50) {
-                const chunk = ids.slice(i, i + 50);
-                const data = await fetchJson(
-                    `https://store.steampowered.com/api/appdetails?appids=${chunk.join(',')}&cc=${cc}&filters=price_overview`
-                );
-                if (!data) {
-                    continue;
+    async function fetchAppPricesForCountry(ids, cc) {
+        const found = new Map();
+        const missing = [];
+
+        for (let i = 0; i < ids.length; i += 50) {
+            const chunk = ids.slice(i, i + 50);
+            const data = await fetchJson(
+                `https://store.steampowered.com/api/appdetails?appids=${chunk.join(',')}&cc=${cc}&filters=price_overview`
+            );
+            chunk.forEach(id => {
+                const overview = data && data[id] && data[id].data && data[id].data.price_overview;
+                const price = overview && matchingSteamPrice(priceFromCents(overview.initial, overview.final, overview.currency));
+                if (price) {
+                    found.set(String(id), price);
+                } else {
+                    missing.push(String(id));
                 }
-                chunk.forEach(id => {
-                    const overview = data[id] && data[id].data && data[id].data.price_overview;
-                    if (!overview) {
-                        return;
-                    }
-                    const price = priceFromCents(overview.initial, overview.currency);
-                    if (price) {
-                        retail.set(String(id), price);
-                    }
-                });
-            }
-            return retail;
+            });
         }
 
+        return { found, missing };
+    }
+
+    async function fetchSubPricesForCountry(ids, cc) {
+        const found = new Map();
+        const missing = [];
         const queue = ids.slice();
         const workers = Array.from({ length: Math.min(4, queue.length) }, async () => {
             while (queue.length) {
@@ -489,21 +517,74 @@
                     `https://store.steampowered.com/api/packagedetails?packageids=${id}&cc=${cc}`
                 );
                 const priceNode = data && data[id] && data[id].data && data[id].data.price;
-                if (!priceNode) {
-                    continue;
-                }
-                const price = priceFromCents(priceNode.initial, priceNode.currency);
+                const price = priceNode && matchingSteamPrice(priceFromCents(priceNode.initial, priceNode.final, priceNode.currency));
                 if (price) {
-                    retail.set(String(id), price);
+                    found.set(String(id), price);
+                } else {
+                    missing.push(String(id));
                 }
             }
         });
         await Promise.all(workers);
+        return { found, missing };
+    }
+
+    async function fetchSteamRetailMap(steamType, ids) {
+        const retail = new Map();
+        if (!ids.length || (steamType !== 'app' && steamType !== 'sub')) {
+            return retail;
+        }
+
+        let pending = [...new Set(ids.map(String))];
+        for (const cc of steamCountryCodes()) {
+            if (!pending.length) {
+                break;
+            }
+
+            const batch = steamType === 'app'
+                ? await fetchAppPricesForCountry(pending, cc)
+                : await fetchSubPricesForCountry(pending, cc);
+            batch.found.forEach((price, id) => retail.set(id, price));
+            pending = batch.missing;
+        }
+
         return retail;
     }
 
+    function officialStoreAmount(gameData, steamPrice) {
+        const retail = parseFloat(gameData.prices && gameData.prices.currentRetail);
+        if (Number.isFinite(retail) && retail >= 0) {
+            return retail;
+        }
+
+        if (!steamPrice) {
+            return null;
+        }
+
+        const ggCurrency = String(gameData.prices.currency || '').toUpperCase();
+        if (!ggCurrency || ggCurrency !== steamPrice.currency || !Number.isFinite(steamPrice.current)) {
+            return null;
+        }
+
+        return steamPrice.current;
+    }
+
     function applyRetailDiscount(result, gameData, retailPrice) {
-        if (!result.success || !retailPrice || !gameData || !gameData.prices) {
+        if (!result.success || !gameData || !gameData.prices) {
+            return result;
+        }
+
+        const keyshop = parseFloat(gameData.prices.currentKeyshops);
+        const official = officialStoreAmount(gameData, retailPrice);
+        if (Number.isFinite(official) && Number.isFinite(keyshop) && keyshop > official + 0.009) {
+            const percent = increasePercent(official, keyshop);
+            result.aboveOfficial = true;
+            result.discount = percent ? `+${percent}%` : null;
+            return result;
+        }
+
+        result.aboveOfficial = false;
+        if (!retailPrice) {
             return result;
         }
 
@@ -512,7 +593,7 @@
             return result;
         }
 
-        const percent = discountPercent(retailPrice.amount, gameData.prices.currentKeyshops);
+        const percent = discountPercent(retailPrice.amount, keyshop);
         result.discount = percent ? `-${percent}%` : null;
         return result;
     }
@@ -667,30 +748,9 @@
     }
 
     // === DISPLAY FUNCTIONS ===
-    function createHistoricLowBadge() {
-        return `<span style="
-            background-color: #d9534f;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-left: 6px;
-            display: inline-block;
-        ">📉 Historical Low</span>`;
-    }
+    const MARKUP_COLOR = '#7c3aed';
 
-    function createDiscountBadge(discount) {
-        if (!discount || !String(discount).includes('%')) {
-            return '';
-        }
-
-        const discountValue = parseInt(String(discount).replace(/[^0-9]/g, ''), 10);
-        let color = '#45cc54';
-        if (discountValue > 90) color = '#d9534f';
-        else if (discountValue > 60) color = '#f0ad4e';
-        else if (discountValue > 30) color = '#5cb89c';
-
+    function createBadge(label, color) {
         return `<span style="
             background-color: ${color};
             color: white;
@@ -700,12 +760,40 @@
             font-weight: bold;
             margin-left: 6px;
             display: inline-block;
-        ">${discount}</span>`;
+        ">${label}</span>`;
+    }
+
+    function createHistoricLowBadge() {
+        return createBadge('📉 Historical Low', '#d9534f');
+    }
+
+    function createAboveOfficialBadge() {
+        return createBadge('⚠️ More Expensive', MARKUP_COLOR);
+    }
+
+    function createDiscountBadge(discount) {
+        if (!discount || !String(discount).includes('%')) {
+            return '';
+        }
+
+        const text = String(discount).trim();
+        if (text.startsWith('+')) {
+            return createBadge(text, MARKUP_COLOR);
+        }
+
+        const discountValue = parseInt(text.replace(/[^0-9]/g, ''), 10);
+        let color = '#45cc54';
+        if (discountValue > 90) color = '#d9534f';
+        else if (discountValue > 60) color = '#f0ad4e';
+        else if (discountValue > 30) color = '#5cb89c';
+
+        return createBadge(text, color);
     }
 
     function priceBadges(result) {
+        const markupPart = result.aboveOfficial ? createAboveOfficialBadge() : '';
         const historicPart = result.historicLow ? createHistoricLowBadge() : '';
-        return `${createDiscountBadge(result.discount)}${historicPart}`;
+        return `${createDiscountBadge(result.discount)}${markupPart}${historicPart}`;
     }
 
     function updatePriceDisplay(result, priceInfo) {
@@ -903,7 +991,7 @@
 
     // === MAIN INITIALIZATION ===
     function init() {
-        console.log('🔑 SteamGifts Key Prices v4.3 initialized');
+        console.log('🔑 SteamGifts Key Prices v4.4 initialized');
         console.log(`📊 Mode: ${currentMode}, Individual: ${individualEnabled}, List: ${listEnabled}, API: ${getApiKey() ? 'SET' : 'NOT SET'}, Currency: ${getCurrencyCode()}`);
 
         maybePromptForApiKeyOnce();
