@@ -17,7 +17,7 @@ A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that dis
 
 This is a **userscript**, and requires a userscript manager extension:
 
-![Tampermonkey](https://img.shields.io/badge/Tampermonkey-000000?style=for-the-badge&logo=googlechrome&logoColor=white)   ![Greasemonkey](https://img.shields.io/badge/Greasemonkey-FBAC00?style=for-the-badge&logo=firefox-browser&logoColor=white)   ![Violentmonkey](https://img.shields.io/badge/Violentmonkey-c37731?style=for-the-badge&logo=vivaldi&logoColor=white)
+[![Tampermonkey](https://img.shields.io/badge/Tampermonkey-000000?style=for-the-badge&logo=googlechrome&logoColor=white)](https://www.tampermonkey.net/)   [![Greasemonkey](https://img.shields.io/badge/Greasemonkey-FBAC00?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)   [![Violentmonkey](https://img.shields.io/badge/Violentmonkey-c37731?style=for-the-badge&logo=vivaldi&logoColor=white)](https://violentmonkey.github.io/get-it/)
 
 > Make sure one of the userscript managers above is installed and enabled in your browser.
 
@@ -25,8 +25,8 @@ This is a **userscript**, and requires a userscript manager extension:
 
 ### 🖱️ One-Click Install
 
-![Install from GitHub](https://img.shields.io/badge/Install%20from-GitHub-24292E?style=for-the-badge&logo=github&logoColor=white)
-![Install from GreasyFork](https://img.shields.io/badge/Install%20from-GreasyFork-800000?style=for-the-badge&logo=greasyfork&logoColor=white)
+[![Install from GitHub](https://img.shields.io/badge/Install%20from-GitHub-24292E?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js)
+[![Install from GreasyFork](https://img.shields.io/badge/Install%20from-GreasyFork-800000?style=for-the-badge&logo=greasyfork&logoColor=white)](https://greasyfork.org/en/scripts/541115-steamgifts-key-prices)
 
 ### First-time setup
 
@@ -92,8 +92,8 @@ The price shown is the cheapest one available in the Keyshops section for that g
 
 Please consider ⭐ starring the repo and supporting my work:
 
-![Revolut](https://img.shields.io/badge/Support%20via-Revolut-0075EB?style=for-the-badge&logo=revolut&logoColor=white)
-![PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)
+[![Revolut](https://img.shields.io/badge/Support%20via-Revolut-0075EB?style=for-the-badge&logo=revolut&logoColor=white)](https://Revolut.Me/ivan3ryuk)
+[![PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://PayPal.me/mappertaurus)
 
 ---
 
