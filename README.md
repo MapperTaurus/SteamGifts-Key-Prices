@@ -7,7 +7,7 @@ A customizable userscript for [SteamGifts](https://www.steamgifts.com/) that dis
 [![License](https://img.shields.io/github/license/MapperTaurus/SteamGifts-Key-Prices.svg?label=License&logo=gnu&cacheSeconds=2592000)](https://github.com/MapperTaurus/SteamGifts-Key-Prices/blob/master/LICENSE)
 
 
-![Individual giveaway with the lowest keyshop price and discount shown in Deals.GG](https://i.imgur.com/CDrBWAx.png)
+![Individual giveaway with the lowest keyshop price and discount shown in Deals.GG](https://i.imgur.com/TI5W0EO.png)
 
 ![Giveaway list with keyshop prices and discount badges](https://i.imgur.com/cex8xhW.png)
 
