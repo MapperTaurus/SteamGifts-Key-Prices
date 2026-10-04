@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         SteamGifts Key Prices
 // @namespace    SteamGifts Key Prices from Deals.GG
-// @version      4.4
-// @description  A customizable web extension for SteamGifts that displays the lowest keyshop prices from GG.deals directly on all giveaway pages
+// @version      4.5
+// @description  A customizable userscript for SteamGifts that displays the lowest keyshop prices from GG.deals directly on giveaway listings
 // @author       Taurus#
 // @homepage	 https://github.com/MapperTaurus/SteamGifts-Key-Prices
 // @downloadURL	 https://github.com/MapperTaurus/SteamGifts-Key-Prices/raw/master/SteamGiftsKeyPrices.user.js
@@ -347,9 +347,9 @@
     // === PRICE FETCHING FUNCTIONS (ENHANCED WITH CACHING) ===
     function getCacheKey(steamType, steamId, gameTitle) {
         if (steamType && steamId) {
-            return `${steamType}_${steamId}_${getRegion()}_v44b`;
+            return `${steamType}_${steamId}_${getRegion()}_v45`;
         }
-        return `title_${gameTitle || 'unknown'}_${getRegion()}_v44b`;
+        return `title_${gameTitle || 'unknown'}_${getRegion()}_v45`;
     }
 
     function discountPercent(retailAmount, keyshopAmount) {
@@ -551,22 +551,33 @@
         return retail;
     }
 
+    function sameCurrencyAmount(gameData, price, field) {
+        if (!price || !Number.isFinite(price[field])) {
+            return null;
+        }
+
+        const ggCurrency = String(gameData.prices && gameData.prices.currency || '').toUpperCase();
+        if (!ggCurrency || ggCurrency !== price.currency) {
+            return null;
+        }
+
+        return price[field];
+    }
+
     function officialStoreAmount(gameData, steamPrice) {
         const retail = parseFloat(gameData.prices && gameData.prices.currentRetail);
+        const steamCurrent = sameCurrencyAmount(gameData, steamPrice, 'current');
+
+        // Compare the keyshop with the live Steam price. GG.deals currentRetail can
+        // stay a flat number across currencies, which flips one currency to a markup
+        // and the other to a discount. Retail is only used when Steam has no price.
+        if (steamCurrent != null) {
+            return steamCurrent;
+        }
         if (Number.isFinite(retail) && retail >= 0) {
             return retail;
         }
-
-        if (!steamPrice) {
-            return null;
-        }
-
-        const ggCurrency = String(gameData.prices.currency || '').toUpperCase();
-        if (!ggCurrency || ggCurrency !== steamPrice.currency || !Number.isFinite(steamPrice.current)) {
-            return null;
-        }
-
-        return steamPrice.current;
+        return null;
     }
 
     function applyRetailDiscount(result, gameData, retailPrice) {
@@ -579,6 +590,7 @@
         if (Number.isFinite(official) && Number.isFinite(keyshop) && keyshop > official + 0.009) {
             const percent = increasePercent(official, keyshop);
             result.aboveOfficial = true;
+            result.historicLow = false;
             result.discount = percent ? `+${percent}%` : null;
             return result;
         }
@@ -792,7 +804,7 @@
 
     function priceBadges(result) {
         const markupPart = result.aboveOfficial ? createAboveOfficialBadge() : '';
-        const historicPart = result.historicLow ? createHistoricLowBadge() : '';
+        const historicPart = result.historicLow && !result.aboveOfficial ? createHistoricLowBadge() : '';
         return `${createDiscountBadge(result.discount)}${markupPart}${historicPart}`;
     }
 
@@ -991,7 +1003,7 @@
 
     // === MAIN INITIALIZATION ===
     function init() {
-        console.log('🔑 SteamGifts Key Prices v4.4 initialized');
+        console.log('🔑 SteamGifts Key Prices v4.5 initialized');
         console.log(`📊 Mode: ${currentMode}, Individual: ${individualEnabled}, List: ${listEnabled}, API: ${getApiKey() ? 'SET' : 'NOT SET'}, Currency: ${getCurrencyCode()}`);
 
         maybePromptForApiKeyOnce();

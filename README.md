@@ -84,6 +84,9 @@ Yes — this script does not interact with your account or modify anything on St
 **Q: Which price is shown in the giveaways?**
 The price shown is the cheapest one available in the Keyshops section for that game on GG.deals, regardless of DRM. This means there may be rare cases where the game's price in the Keyshops is higher than its price on Steam, or where the cheapest available DRM is not Steam (for example, Red Dead Redemption).
 
+**Q: Are the displayed prices always accurate?**
+Not necessarily. Prices and historical pricing information are retrieved from GG.deals and may occasionally be incorrect, outdated, or inconsistent. Always check the price manually on the relevant store before making a purchase. The displayed price should be treated as a reference only and not as a guarantee of the actual purchase price.
+
 ---
 
 
