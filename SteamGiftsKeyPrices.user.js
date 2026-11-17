@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SteamGifts Key Prices
 // @namespace    SteamGifts Key Prices from Deals.GG
-// @version      4.5
+// @version      4.6
 // @description  A customizable userscript for SteamGifts that displays the lowest keyshop prices from GG.deals directly on giveaway listings
 // @author       Taurus#
 // @homepage	 https://github.com/MapperTaurus/SteamGifts-Key-Prices
@@ -292,6 +292,12 @@
                window.location.pathname.startsWith('/group/');
     }
 
+    function isTableGiveawayPage() {
+        const path = window.location.pathname;
+        return path === '/giveaways/wishlist' || path.startsWith('/giveaways/wishlist/') ||
+               path === '/giveaways/entered' || path.startsWith('/giveaways/entered/');
+    }
+
     // === UTILITY FUNCTIONS ===
     function parseSteamUrl(steamUrl) {
         if (!steamUrl) {
@@ -310,6 +316,34 @@
         const scope = root || document;
         const steamLink = scope.querySelector('a[href*="store.steampowered.com/"]');
         return parseSteamUrl(steamLink ? steamLink.href : null);
+    }
+
+    function getTableSteamIdentity(row) {
+        const fromLink = getSteamIdentity(row);
+        if (fromLink.id) {
+            return fromLink;
+        }
+
+        const thumbnail = row.querySelector('.table_image_thumbnail');
+        const style = thumbnail ? (thumbnail.getAttribute('style') || '') : '';
+        const match = style.match(/steam\/(apps|subs|bundles)\/(\d+)/i);
+        if (!match) {
+            return { type: null, id: null };
+        }
+
+        const typeMap = { apps: 'app', subs: 'sub', bundles: 'bundle' };
+        return { type: typeMap[match[1].toLowerCase()], id: match[2] };
+    }
+
+    function getTableGameTitle(row) {
+        const heading = row.querySelector('.table__column__heading');
+        if (!heading) {
+            return null;
+        }
+
+        const clone = heading.cloneNode(true);
+        clone.querySelectorAll('.is-faded').forEach(node => node.remove());
+        return clone.textContent.trim() || null;
     }
 
     function getGameTitle(root) {
@@ -910,6 +944,25 @@
         return button;
     }
 
+    function createListPriceElement() {
+        const priceElement = document.createElement('div');
+        priceElement.style.fontSize = '14px';
+        priceElement.style.color = '#324862';
+        priceElement.style.marginTop = '2px';
+        priceElement.style.lineHeight = '1.2';
+        return priceElement;
+    }
+
+    function buildListTarget(steam, gameTitle, priceElement) {
+        return {
+            steamType: steam.type,
+            steamId: steam.id,
+            gameTitle: gameTitle,
+            cacheKey: getCacheKey(steam.type, steam.id, gameTitle),
+            priceElement: priceElement
+        };
+    }
+
     function prepareGiveawayRow(row) {
         if (row.dataset.priceProcessed) {
             return null;
@@ -926,20 +979,30 @@
 
         row.dataset.priceProcessed = 'true';
 
-        const priceElement = document.createElement('div');
-        priceElement.style.fontSize = '14px';
-        priceElement.style.color = '#324862';
-        priceElement.style.marginTop = '2px';
-        priceElement.style.lineHeight = '1.2';
+        const priceElement = createListPriceElement();
         headingElement.appendChild(priceElement);
+        return buildListTarget(steam, gameTitle, priceElement);
+    }
 
-        return {
-            steamType: steam.type,
-            steamId: steam.id,
-            gameTitle: gameTitle,
-            cacheKey: getCacheKey(steam.type, steam.id, gameTitle),
-            priceElement: priceElement
-        };
+    function prepareTableRow(row) {
+        if (row.dataset.priceProcessed) {
+            return null;
+        }
+
+        const heading = row.querySelector('.table__column__heading');
+        const steam = getTableSteamIdentity(row);
+        const gameTitle = getTableGameTitle(row);
+
+        if (!heading || (!steam.id && !gameTitle)) {
+            return null;
+        }
+
+        row.dataset.priceProcessed = 'true';
+
+        const priceElement = createListPriceElement();
+        const anchor = heading.closest('p') || heading;
+        anchor.insertAdjacentElement('afterend', priceElement);
+        return buildListTarget(steam, gameTitle, priceElement);
     }
 
     function processAllGiveawayRows() {
@@ -950,6 +1013,15 @@
                 pendingTargets.push(target);
             }
         });
+
+        if (isTableGiveawayPage()) {
+            document.querySelectorAll('.table__row-outer-wrap').forEach(row => {
+                const target = prepareTableRow(row);
+                if (target) {
+                    pendingTargets.push(target);
+                }
+            });
+        }
 
         if (pendingTargets.length === 0) {
             return;
@@ -1003,7 +1075,7 @@
 
     // === MAIN INITIALIZATION ===
     function init() {
-        console.log('🔑 SteamGifts Key Prices v4.5 initialized');
+        console.log('🔑 SteamGifts Key Prices v4.6 initialized');
         console.log(`📊 Mode: ${currentMode}, Individual: ${individualEnabled}, List: ${listEnabled}, API: ${getApiKey() ? 'SET' : 'NOT SET'}, Currency: ${getCurrencyCode()}`);
 
         maybePromptForApiKeyOnce();

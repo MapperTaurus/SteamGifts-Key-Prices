@@ -56,6 +56,8 @@ Shows the **lowest keyshop prices** from [GG.deals](https://gg.deals/) across ev
 - Homepage
 - Group giveaways
 - Wishlist / Recommended / New pages
+- Community Wishlist
+- Entered giveaways
 - Individual Giveaway pages
 
 Works for both **Steam Apps** (games & DLCs) and **Steam Packages** (subs/bundles), with color-coded discount bubbles showing your savings at a glance.
